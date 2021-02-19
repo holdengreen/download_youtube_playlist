@@ -1,0 +1,125 @@
+#!/usr/bin/python3
+
+from pytube import Playlist
+from pytube import YouTube
+
+import os
+import sys
+import urllib.request
+from shlex import quote
+
+DEBUG = False
+
+def decide(yt):
+    prev_size = {
+        'video': 0,
+        'audio': 0
+    }
+    ret = {
+        'video': None,
+        'audio': None
+    }
+
+    for stream in yt.streams.filter(only_video=True):
+        if(stream.filesize > prev_size['video']):
+            prev_size['video'] = stream.filesize
+            ret['video'] = stream
+
+    for stream in yt.streams.filter(only_audio=True):
+        if(stream.filesize > prev_size['audio']):
+            prev_size['audio'] = stream.filesize
+            ret['audio'] = stream
+
+
+    return ret
+
+
+
+def download_video(url):
+    yt = YouTube(url)
+    print("Downloading video")
+    print(yt.title)
+
+    if(DEBUG):
+        print("########## Stream Info #########")
+        for stream in yt.streams:
+            print(str(stream) + " " + str(stream.filesize))
+        print("################################")
+        print(stream)
+        print(stream.filesize)
+        print("################################")
+
+    os.mkdir(yt.title)
+
+    print("Downloading thumbnail")
+
+    urllib.request.urlretrieve(yt.thumbnail_url, yt.title + '/thumbnail.ico')
+
+    try:
+        captions = yt.captions['en'];
+        if (type(captions) == 'list' or type(captions) == 'tuple'):
+            for caption in captions:
+                print(dir(caption))
+                caption.download(title=caption.name + ".xml", srt=False, output_path=yt.title)
+        else:
+            captions.download(title=captions.name + ".xml", srt=False, output_path=yt.title)
+
+    except:
+        print("There was an error handling captions for this video. This likely means that there are no english captions available. Captions downloading will be skipped.")
+
+    s = decide(yt)
+    if(DEBUG):
+        print('###### streams ######')
+        print(s)
+        print('###### ####### ######')
+
+    v = s['video']
+    a = s['audio']
+
+    vf = v.get_file_path("video", yt.title)
+    af = a.get_file_path("audio", yt.title)
+
+    extension = v.subtype
+
+    if(DEBUG):
+        print('#######')
+        print(vf)
+        print(af)
+        print(extension)
+        print('#######')
+
+    v.download(yt.title, "video", None, True)
+    a.download(yt.title, "audio", None, True)
+
+    print("Merging audio and video")
+    os.system("ffmpeg -i {vf} -i {af} -c:v copy {title}/main.{ext}".format(vf=quote(vf), af=quote(af), ext=extension,
+                                                                           title=quote(yt.title)))
+
+    os.remove(vf)
+    os.remove(af)
+
+
+'''
+i = 0
+for stream in yt.streams:
+    d = yt.title+"/"+str(i)
+    os.mkdir(d)
+    stream.download(d, stream.default_filename, None, True)
+    i += 1
+'''
+
+plurl = ""
+if(len(sys.argv) > 1):
+    plurl = sys.argv[1]
+else:
+    plurl = input("Please provide a playlist URL to download: ")
+
+playlist = Playlist(plurl)
+print("### {title} ###".format(title=playlist.title))
+print('Number of videos in playlist: %s' % len(playlist.video_urls))
+#playlist.download_all()
+
+os.mkdir(playlist.title)
+os.chdir(playlist.title)
+for url in playlist.video_urls:
+    download_video(url)
