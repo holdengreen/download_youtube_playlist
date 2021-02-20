@@ -1,5 +1,5 @@
 # download_youtube_playlist
-A python3 script for easily downloading and archiving entire YouTube playlists from the console. Downloads audio and video in highest quality along with thumbnail and english captions when available. Uses pytube and ffmpeg.
+A python3 script for easily downloading and archiving entire YouTube playlists from the console. Downloads audio and video in highest quality along with thumbnail and english captions when available. Uses pytube, colorful and ffmpeg.
 
 This was created to aid in backing-up and archiving data from youtube.
 

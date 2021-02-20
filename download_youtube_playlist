@@ -1,7 +1,10 @@
 #!/usr/bin/python3
 
+import pytube
 from pytube import Playlist
 from pytube import YouTube
+
+import colorful as cf
 
 import os
 import sys
@@ -9,6 +12,18 @@ import urllib.request
 from shlex import quote
 
 DEBUG = False
+
+def printlog(string):
+    print(cf.blue(string))
+
+def printwarn(string):
+    print(cf.yellow(string))
+
+def printerror(string):
+    print(cf.red(string))
+
+def printdebug(string):
+    print(cf.green(string))
 
 def escape(string):
     return string.translate(str.maketrans({
@@ -41,24 +56,30 @@ def decide(yt):
 
 
 def download_video(url):
-    yt = YouTube(url)
+    yt = None
+    try:
+        yt = YouTube(url)
+    except pytube.exceptions.VideoPrivate:
+        printerror("Video {url} is private - skipping")
+        return;
+
     title = escape(yt.title)
-    print("Downloading video")
-    print(yt.title)
-    print("{0} (corrected)".format(title))
+    printlog("Downloading video")
+    printlog(yt.title)
+    printlog("{0} (corrected)".format(title))
 
     if(os.path.exists(title)):
-        print("Directory already exists! - Skipping video")
+        printwarn("Directory already exists! - Skipping video")
         return;
 
     if(DEBUG):
-        print("########## Stream Info #########")
+        printdebug("########## Stream Info #########")
         for stream in yt.streams:
-            print(str(stream) + " " + str(stream.filesize))
-        print("################################")
-        print(stream)
-        print(stream.filesize)
-        print("################################")
+            printdebug(str(stream) + " " + str(stream.filesize))
+        printdebug("################################")
+        printdebug(stream)
+        printdebug(stream.filesize)
+        printdebug("################################")
 
     os.mkdir(title)
 
@@ -66,11 +87,11 @@ def download_video(url):
     url_file.write(url)
     url_file.close()
 
-    print("Downloading thumbnail")
+    printlog("Downloading thumbnail")
 
     urllib.request.urlretrieve(yt.thumbnail_url, title + '/thumbnail.ico')
 
-    print("Downloading captions")
+    printlog("Downloading captions")
     try:
         captions = yt.captions['en'];
         if (type(captions) == 'list' or type(captions) == 'tuple'):
@@ -80,13 +101,13 @@ def download_video(url):
             captions.download(title=captions.name + ".xml", srt=False, output_path=title)
 
     except:
-        print("There was an error handling captions for this video. This likely means that there are no english captions available. Captions downloading will be skipped.")
+        printerror("There was an error handling captions for this video. This likely means that there are no english captions available. Captions downloading will be skipped.")
 
     s = decide(yt)
     if(DEBUG):
-        print('###### streams ######')
-        print(s)
-        print('###### ####### ######')
+        printdebug('###### streams ######')
+        printdebug(s)
+        printdebug('###### ####### ######')
 
     v = s['video']
     a = s['audio']
@@ -97,16 +118,16 @@ def download_video(url):
     extension = v.subtype
 
     if(DEBUG):
-        print('#######')
-        print(vf)
-        print(af)
-        print(extension)
-        print('#######')
+        printdebug('#######')
+        printdebug(vf)
+        printdebug(af)
+        printdebug(extension)
+        printdebug('#######')
 
     v.download(title, "video", None, True)
     a.download(title, "audio", None, True)
 
-    print("Merging audio and video")
+    printlog("Merging audio and video")
     os.system("ffmpeg -i {vf} -i {af} -c:v copy {title}/main.{ext}".format(vf=quote(vf), af=quote(af), ext=extension,
                                                                            title=quote(title)))
 
@@ -127,21 +148,26 @@ plurl = ""
 if(len(sys.argv) > 1):
     plurl = sys.argv[1]
 else:
-    plurl = input("Please provide a playlist URL to download: ")
+    plurl = input(cf.orange("Please provide a playlist URL to download: "))
 
 playlist = Playlist(plurl)
 title = escape(playlist.title)
-print("############ {title}             ############".format(title=playlist.title))
-print("############ {title} (corrected) ############".format(title=title))
-print('Number of videos in playlist: %s' % len(playlist.video_urls))
+count = len(playlist.video_urls)
+printlog("############ {title}             ############".format(title=playlist.title))
+printlog("############ {title} (corrected) ############".format(title=title))
+printlog('Number of videos in playlist: %s' % count)
+
 #playlist.download_all()
 
 try:
     os.mkdir(escape(title))
 except:
-    print("Playlist directory seems to already exist")
+    printwarn("Playlist directory seems to already exist")
 
-print("change dir: " + title)
+printlog("change dir: " + title)
 os.chdir(title)
+i = 1
 for url in playlist.video_urls:
+    printlog("Video {0} of {1}".format(i, count))
     download_video(url)
+    i += 1
