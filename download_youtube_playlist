@@ -10,6 +10,11 @@ from shlex import quote
 
 DEBUG = False
 
+def escape(string):
+    return string.translate(str.maketrans({
+        '/' : '|'
+    }))
+
 def decide(yt):
     prev_size = {
         'video': 0,
@@ -37,8 +42,14 @@ def decide(yt):
 
 def download_video(url):
     yt = YouTube(url)
+    title = escape(yt.title)
     print("Downloading video")
     print(yt.title)
+    print("{0} (corrected)".format(title))
+
+    if(os.path.exists(title)):
+        print("Directory already exists! - Skipping video")
+        return;
 
     if(DEBUG):
         print("########## Stream Info #########")
@@ -49,11 +60,11 @@ def download_video(url):
         print(stream.filesize)
         print("################################")
 
-    os.mkdir(yt.title)
+    os.mkdir(title)
 
     print("Downloading thumbnail")
 
-    urllib.request.urlretrieve(yt.thumbnail_url, yt.title + '/thumbnail.ico')
+    urllib.request.urlretrieve(yt.thumbnail_url, title + '/thumbnail.ico')
 
     try:
         captions = yt.captions['en'];
@@ -115,11 +126,18 @@ else:
     plurl = input("Please provide a playlist URL to download: ")
 
 playlist = Playlist(plurl)
-print("### {title} ###".format(title=playlist.title))
+title = escape(playlist.title)
+print("############ {title}             ############".format(title=playlist.title))
+print("############ {title} (corrected) ############".format(title=title))
 print('Number of videos in playlist: %s' % len(playlist.video_urls))
 #playlist.download_all()
 
-os.mkdir(playlist.title)
-os.chdir(playlist.title)
+try:
+    os.mkdir(escape(title))
+except:
+    print("Playlist directory seems to already exist")
+
+print("change dir: " + title)
+os.chdir(title)
 for url in playlist.video_urls:
     download_video(url)
