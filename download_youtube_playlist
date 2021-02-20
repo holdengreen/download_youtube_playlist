@@ -62,18 +62,22 @@ def download_video(url):
 
     os.mkdir(title)
 
+    url_file = open("{0}/url".format(title), 'w')
+    url_file.write(url)
+    url_file.close()
+
     print("Downloading thumbnail")
 
     urllib.request.urlretrieve(yt.thumbnail_url, title + '/thumbnail.ico')
 
+    print("Downloading captions")
     try:
         captions = yt.captions['en'];
         if (type(captions) == 'list' or type(captions) == 'tuple'):
             for caption in captions:
-                print(dir(caption))
-                caption.download(title=caption.name + ".xml", srt=False, output_path=yt.title)
+                caption.download(title=caption.name + ".xml", srt=False, output_path=title)
         else:
-            captions.download(title=captions.name + ".xml", srt=False, output_path=yt.title)
+            captions.download(title=captions.name + ".xml", srt=False, output_path=title)
 
     except:
         print("There was an error handling captions for this video. This likely means that there are no english captions available. Captions downloading will be skipped.")
@@ -87,8 +91,8 @@ def download_video(url):
     v = s['video']
     a = s['audio']
 
-    vf = v.get_file_path("video", yt.title)
-    af = a.get_file_path("audio", yt.title)
+    vf = v.get_file_path("video", title)
+    af = a.get_file_path("audio", title)
 
     extension = v.subtype
 
@@ -99,12 +103,12 @@ def download_video(url):
         print(extension)
         print('#######')
 
-    v.download(yt.title, "video", None, True)
-    a.download(yt.title, "audio", None, True)
+    v.download(title, "video", None, True)
+    a.download(title, "audio", None, True)
 
     print("Merging audio and video")
     os.system("ffmpeg -i {vf} -i {af} -c:v copy {title}/main.{ext}".format(vf=quote(vf), af=quote(af), ext=extension,
-                                                                           title=quote(yt.title)))
+                                                                           title=quote(title)))
 
     os.remove(vf)
     os.remove(af)
