@@ -127,7 +127,13 @@ def download_video(url):
     except:
         printerror("There was an error handling captions for this video. This likely means that there are no english captions available. Captions downloading will be skipped.")
 
-    s = decide(yt)
+    try:
+        s = decide(yt)
+    except:
+        printerror("ERROR locating stream for {title} !".format(title=title))
+        printerror("invalid - skipping")
+        return
+
     if(DEBUG):
         printdebug('###### streams ######')
         printdebug(s)
