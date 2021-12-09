@@ -21,6 +21,10 @@ or
 download_youtube_playlist https://www.youtube.com/playlist?list=OLAK5uy_nK6if5UyWpbIza-ZRjfqayJ1G-nn5RJZs
 ```
 
+# Demo
+Here I download the album "Love Poem" by IU from YouTube.
+![demo of the script downloading the album "Love Poem" by IU](https://raw.githubusercontent.com/holdengreen/assets/main/data/yt-pl-downloader-demo.gif)
+
 # Implementation
 A new directory is created for each playlist and subdirectories are created for each video.
 
@@ -30,6 +34,8 @@ The directories names are corrected or 'escaped()' and the '/' characters are ch
 
 Pytube recommends that audio and video streams are downloaded seperately. This is what I'm doing and at the end I use ffmpeg to merge the two files together before deleting the artifacts.
 
-The way I select the streams is really simple: whichever two streams at the largest (audio and video) are the winners.
+The way I select the streams is really simple: whichever two streams are the largest (audio and video) are the winners.
 
+A 'lock' file is created in each song directory to track invalid state. If a song/video directory is invalid it will be deleted and redownloaded.
 
+A finalized video directory should contain the files 'audio', 'main.mp4' or 'main.webm', 'thumbnail.ico', 'url' and potentially 'English (en).xml'. If it contains 'lock' then it will need to be redownloaded.
