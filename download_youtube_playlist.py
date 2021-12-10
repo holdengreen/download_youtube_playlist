@@ -159,8 +159,7 @@ def download_video(url):
     a.download(title, "audio", None, True)
 
     printlog("Merging audio and video")
-    os.system("ffmpeg -i {vf} -i {af} -c:v copy {title}/main.{ext}".format(vf=quote(vf), af=quote(af), ext=extension,
-                                                                           title=quote(title)))
+    os.system("ffmpeg -i {vf} -i {af} -c:v copy -b:a 196k {title}/main.{ext}".format(vf=quote(vf), af=quote(af), ext=extension, title=quote(title)))
 
     os.remove(vf)
     # os.remove(af)
