@@ -77,7 +77,6 @@ def download_video(url):
         return
 
     title = escape(yt.title)
-    printlog("Downloading video")
     printinfo(yt.title)
     printlog("{0} (corrected)".format(title))
 
@@ -154,7 +153,7 @@ def download_video(url):
         printdebug(extension)
         printdebug('#######')
 
-        printlog("Downloading video")
+    printlog("Downloading video")
     v.download(title, "video", None, True)
     printlog("Downloading audio")
     a.download(title, "audio", None, True)
@@ -203,6 +202,6 @@ printdebug("change dir: " + title)
 os.chdir(title)
 i = 1
 for url in playlist.video_urls:
-    printlog("Video {0} of {1}".format(i, count))
+    printinfo("Video {0} of {1}".format(i, count))
     download_video(url)
     i += 1
